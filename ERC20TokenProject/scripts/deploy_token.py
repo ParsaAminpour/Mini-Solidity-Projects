@@ -1,17 +1,17 @@
 from rich import print
 from rich.console import Console
-from brownie import config, accounts, ERC20Token
-import sys, time, warning
+from brownie import config, accounts, KIA, network
+import argparse
 
-def main(name:str, symbol:str, total:int):
-    global token_name, token_symbol, total_supply, account
-    token_name, token_symbol, total_supply = name, symbol, total
-    
-    account = accounts.add(config.get('wallets').get('from_key',accounts[0])
+# name:str, symbol:str, total:int
+def main():
+    wallet_addr = config['wallets']['from_key']
+    if wallet_addr != '':
+        account = accounts.add(wallet_addr)
+    else: account = accounts[0]
 
-    token = ERC20Token.deploy(token_name, token_symbol, total_supply,
-        {'from' : account})
-    
+    token = KIA.deploy('KiaToken', 'KIA', 1e20,
+        {'from' : account}, publish_source=True)
     
 
-        
+
