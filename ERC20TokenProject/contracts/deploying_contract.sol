@@ -3,7 +3,7 @@ pragma solidity ^0.8.0;
 
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
-contract KIA is ERC20{
+contract exercise is ERC20{
     address public constant OWNER = 0xe2A6c9cFBc1571114ABCF92D5C3C3520434Ee548;
     // bool private paused;
     address[] public users;
@@ -46,18 +46,18 @@ contract KIA is ERC20{
         return (msg.sender, status); 
     }
 
-    function getContractStatus() external view returns(Status){
+    function getContractStatus() public view returns(Status){
         (, Status _status) = getCallerAndStatus();
         return _status;
     }
 
-    function addContributers(address _addr) external returns(uint conts) {
+    function addContributers(address _addr) public returns(uint conts) {
         // address[] memory users = new address[](10);
         users.push(_addr);
         return users.length;
     } 
 
-    function efficient_remove(uint _index) external returns(uint) {
+    function efficient_remove(uint _index) public returns(uint) {
         require(_index < users.length, 'the index is overflow');
 
         users[_index] = users[users.length];
@@ -65,7 +65,7 @@ contract KIA is ERC20{
     }
 
     error address_error();
-    function test_owner(address _addr) external view returns(address) {
+    function test_owner(address _addr) public returns(address) {
         if(_addr != msg.sender) {
             revert address_error();
         }
@@ -78,7 +78,7 @@ contract KIA is ERC20{
     }
 
 
-    function test_function(uint _val) external view ownerIs returns(bool) {
+    function test_function(uint _val) public ownerIs returns(bool) {
         return _val == 0 ? true : false;
     }
 }

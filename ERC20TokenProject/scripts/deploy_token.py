@@ -2,6 +2,7 @@ from rich import print
 from rich.console import Console
 from brownie import config, accounts, KIA, network
 import argparse
+console = Console()
 
 # name:str, symbol:str, total:int
 def main():
@@ -14,4 +15,5 @@ def main():
         {'from' : account}, publish_source=True)
     
 
-
+if __name__ == '__main__':
+    main()
