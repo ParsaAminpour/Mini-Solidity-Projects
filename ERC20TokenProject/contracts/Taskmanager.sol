@@ -1,4 +1,4 @@
-// SPDX-License-Identifier
+// SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
@@ -6,7 +6,7 @@ import "@openzeppelin/contracts/access/AccessControl.sol";
 import "@openzeppelin/contracts/security/Pausable.sol";
 import "./ERC20Token.sol";
 
-contract TaskManager {
+contract TaskManager is Ownable {
      constructor(address _the_task_owner) public {
         require(_the_task_owner != address(0));
         task._task_id = 2;
@@ -31,7 +31,9 @@ contract TaskManager {
         uint indexed task_id_event
     );
 
-     function createTask(string memory _task_input, address _task_owner_input, uint _task_id_input) external virtual returns(bool) {
+    // creating task based on Taskdetail struct
+     function createTask(string memory _task_input, address _task_owner_input, uint _task_id_input) external 
+        virtual returns(bool) {
             require(_task_owner_input != address(0), "invalid address");
             
             task._task = _task_input;
@@ -44,5 +46,7 @@ contract TaskManager {
             TaskByOwner[task._task_owner] = task._task_id;
 
             emit TaskCreated(task._task_owner, task._task_date_created, task._task_id);
-        }
+            assert(TaskByOwner[_task_owner_input] == _task_id_input);
+    }
+
 }
