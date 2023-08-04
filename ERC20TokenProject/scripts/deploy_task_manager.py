@@ -8,7 +8,8 @@ console = Console()
 def generate_task_id(owner_address:str):
     timestamp = str(dt.timestamp(dt.now())).split('.')[0]  #without momiez
     nonce = random.randint(100,999)
-    hashed = owner_address + str(timestamp) + str(nonce)
+    phrase = owner_address + str(timestamp) + str(nonce)
+    hashed = hashlib.sha256(phrase.encode()).hexdigest()
     return hashed[:7]
 
 

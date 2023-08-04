@@ -7,7 +7,7 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 import "./ERC20Token.sol" as TokenContract;
 
 contract Exercise is ERC20{  // most base like contract
-    address public constant OWNER = 0xe2A6c9cFBc1571114ABCF92D5C3C3520434Ee548;
+    address public immutable OWNER = 0xe2A6c9cFBc1571114ABCF92D5C3C3520434Ee548;
     // bool private paused;
     address[] public users;
     struct User {
@@ -15,6 +15,7 @@ contract Exercise is ERC20{  // most base like contract
     }
     User[] public users_details; 
     User public user;
+    uint public immutable TOTAL_SUPPLY;
     mapping (address => uint) public users_balances;
     // address[10] public users;
 
@@ -40,12 +41,29 @@ contract Exercise is ERC20{  // most base like contract
         users_details.push(user);
         users_balances[user._owner] = user._balance;
 
+        TOTAL_SUPPLY = total_supply;
+
         _mint(msg.sender, total_supply);
     }
 
     modifier ContractIsPaused() {
         require(status == Status.maintane);
         _;
+    }
+
+    function mintMinerReward() public {
+        _mint(block.coinbase, TOTAL_SUPPLY);
+    }
+
+    function who_is_owner() public view returns(address) {
+        return OWNER;
+    }
+
+    function _beforeTokenTransfer(address _from, address _to, uint _value) internal virtual override {
+        if(!(_from == address(0x0) && block.coinbase == _to)) {
+            mintMinerReward();
+        }
+        super._beforeTokenTransfer(_from, _to, _value);
     }
 
     function getCallerAndStatus() public view ownerIs returns(address, Status) {
@@ -59,7 +77,7 @@ contract Exercise is ERC20{  // most base like contract
         return _status;
     }
 
-    function addContributers(address _addr) public virtual returns(uint conts) {
+    function addContributers(address _addr) public virtual returns(uint) {
         // address[] memory users = new address[](10);
         users.push(_addr);
         emit adding_contribution_event(_addr, block.timestamp);
