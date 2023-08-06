@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
+import "@chainlink/contracts/src/v0.8/VRFConsumerBase.sol";
+import "@chainlink/contracts/src/v0.8/interfaces/AggregatorV3Interface.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/access/AccessControl.sol";
 import "@openzeppelin/contracts/security/Pausable.sol";
@@ -15,18 +17,12 @@ interface IToken {  // FirstOff we should deploy the Token contract and use this
     function addContributers() external returns(uint);
 }
 
-contract TaskManager is Ownable {
+contract TaskManager {
     using Math for uint;
     using Address for address;
     using Strings for string;
     using ShortStrings for string;
 
-    constructor(address _token_contract_addr, address _the_task_owner, bytes32 _task_id_by_script) public {
-        require(_the_task_owner != address(0));
-        task._task_id = 2;
-        OWNER_TASK = _the_task_owner;
-     }
-     
     struct TaskDetail {
         string _task; uint _task_id;
         TaskStatus _task_status; address _task_owner;
@@ -38,6 +34,8 @@ contract TaskManager is Ownable {
     TaskDetail public task;
     TaskDetail[] public tasks_list_struct;
 
+    GenerateRandomNumLink public random_gen;
+
     address public OWNER_TASK;
 
     mapping (address => uint) public TaskByOwner;
@@ -46,6 +44,15 @@ contract TaskManager is Ownable {
         address indexed task_owner_event, uint indexed task_created_event,
         uint indexed task_id_event
     );
+
+    constructor(address _token_contract_addr, address _the_task_owner, bytes32 _task_id_by_script, address _random_chainlink_contract_address) public
+    {
+        require(_the_task_owner != address(0));
+        task._task_id = 2;
+        OWNER_TASK = _the_task_owner;
+        random_gen = GenerateRandomNumLink(_random_chainlink_contract_address);
+     }
+     
 
     function utfStringLength(string memory str) pure internal returns (uint length) {
         uint i=0;
@@ -92,6 +99,7 @@ contract TaskManager is Ownable {
             }
         }
 
+    // recovery the address owner of the signature if it exist
     function recover(bytes32 _task_signed_message_for_recover, bytes32 _sig) 
         internal pure returns(address) {
             (bytes32 s, bytes32 r, uint8 v) = _split(_sig);
@@ -109,17 +117,25 @@ contract TaskManager is Ownable {
         }
 
 
+    // Get random number from chainlink consumber VRF
+    function get_random_number() public returns(uint) {
+        bytes32 _requestID = random_gen.getRandomNumber();
+        return random_gen.get_random_number();
+    }
+
+
     function _generateIdForTask(string memory _task, address _task_owner, bytes32 _random_hash_val) private view returns(bytes32 hashed) {
         // ShortString stask = _task.toShortString(); 
         require(!(_task_owner == address(0) && utfStringLength(_task) > 4));
 
         // nonce for restricting hash collision issue
         uint nonce = uint(keccak256(abi.encodePacked(
-            block.timestamp, block.prevrandao
+            block.timestamp, block.timestamp
         ))) % 1000;
 
         hashed = keccak256(abi.encodePacked(_task, _task_owner ,nonce));
     }
+
 
     // creating task based on Taskdetail struct
      function createTask(string memory _task_input, address _task_owner_input, bytes32 _task_hashed_val_input) external 
@@ -172,5 +188,35 @@ contract TaskManager is Ownable {
                     Exercise(_token_reward_contract_addr).who_is_owner() , msg.sender, 100)
             );
         }
+    }
+}
+
+
+contract GenerateRandomNumLink is VRFConsumerBase {
+    // CHAINLINK CONFIGURATIONS:
+    bytes32 internal keyHash;  // identifies which chainlink Oracle to use
+    uint internal fee;  // fee to get random number
+    uint public randomResult;
+
+    constructor() 
+        VRFConsumerBase(
+            0x8103B0A8A00be2DDC778e6e7eaa21791Cd364625,
+            0x779877A7B0D9E8603169DdbD7836e478b4624789
+        ) {
+        keyHash = 0x474e34a077df58807dbe9c96d3c009b23b3c6d0cce433e59bbf5b34f823bc56c;
+        fee = 0.25 * (10**18);
+    }
+
+    function getRandomNumber() public returns(bytes32 requestId) {
+        require(LINK.balanceOf(address(this)) >= fee);
+        return requestRandomness(keyHash, fee);   
+    }
+
+    function fulfillRandomness (bytes32 requestId, uint256 randomness) internal override {
+        randomResult = randomness;
+    }
+
+    function get_random_number() public view returns(uint) {
+        return randomResult;
     }
 }

@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
+import "@chainlink/contracts/src/v0.8/VRFConsumerBase.sol";
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/security/Pausable.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
@@ -90,6 +91,17 @@ contract Exercise is ERC20{  // most base like contract
         users[_index] = users[users.length];
         users.pop();
     }
+
+    function getLastNBits(uint8 _x, uint8 _n) public pure returns(uint) {
+        require(_n < 0x0010);
+        uint mask = (1 << _n) - 1; // 0001 -> 1000 -> 0111
+        return _x & mask;  
+    }
+
+    function getSelectorFunc(string calldata _func_detail) public pure returns(bytes4) {
+        return bytes4(keccak256(bytes(_func_detail)));
+        // _func_detail input like "efficient_remove(uint256)"
+    } 
 
     error address_error();
     function test_owner(address _addr) public returns(address) {

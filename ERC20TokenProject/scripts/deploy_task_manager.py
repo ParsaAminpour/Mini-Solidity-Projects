@@ -17,4 +17,4 @@ def main():
     owner_address = "0xe2A6c9cFBc1571114ABCF92D5C3C3520434Ee548"
     task_id = generate_task_id()
     Taskmanager.deploy(owner_address, task_id)
-
+    
