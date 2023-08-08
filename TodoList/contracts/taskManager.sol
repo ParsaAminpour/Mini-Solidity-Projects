@@ -19,13 +19,17 @@ contract SimpleTaskManager is ERC20, VRFConsumerBase {
     uint public TOTAL_SUPPLY;
     uint private randomResult;
 
+    event TaskCreated(address indexed cerator, uint indexed task_id_created);
+    event TaskRemoved(address indexed remover, uint indexed task_id_removed);
+
     enum TASK_STATUS { COMPLETED, PENDING, CANCELED }
 
     // a struct for task
     struct TaskDetails {
         address task_owner; uint task_id; // id will fenerate from VRF
         string task_message; uint task_created_date;
-        uint task_cmplete_period; TASK_STATUS task_status;
+        uint task_complete_period; TASK_STATUS task_status;
+        bytes32 task_signature;
     }
 
     struct User {
@@ -36,8 +40,9 @@ contract SimpleTaskManager is ERC20, VRFConsumerBase {
     User[] private users_list;
     // a mapping for task owner
     mapping(address => TaskDetails[]) public tasks_map;
-    mapping(uint => address) private tasks_id_map;
-    mapping(bytes32 => address) private tasks_sig_map;
+    mapping(uint => address) private task_id_to_owner_map;
+    mapping(address => bytes32[]) private tasks_sig_map;
+    mapping(uint => TaskDetails) private task_id_map;
 
     /** NOTE: The chainlink configuration data is based on sepolia network 
               Change it to your desire network */
@@ -122,7 +127,7 @@ contract SimpleTaskManager is ERC20, VRFConsumerBase {
     }   
 
     function Verify(address _signer_for_verify, string memory _message_for_verify, bytes32 _sig_for_verify)
-        external pure returns(bool) {
+        internal pure returns(bool) {
             bytes32 hashed = _hashedMessage(_message_for_verify);
             bytes32 sig = _signMessage(hashed);
 
@@ -179,22 +184,78 @@ contract SimpleTaskManager is ERC20, VRFConsumerBase {
         uint task_id_generated = _generate_task_id(msg.sender, _task_message, rand_num);
         
         // creating the new task
-        TaskDetails memory new_task = TaskDetails(
-            msg.sender, rand_num, _task_message, block.timestamp, _task_complete_date, TASK_STATUS.PENDING);  
-        
-        tasks_map[msg.sender].push(new_task);
-        tasks_id_map[task_id_generated] = msg.sender;
-
 
         // signing ownership of this task by owner
         bytes32 hashed_message_for_sig = _hashedMessage(_task_message);
         bytes32 signed_message_val = _signMessage(hashed_message_for_sig);
-        tasks_sig_map[signed_message_val] = msg.sender;
+        tasks_sig_map[msg.sender].push(signed_message_val);
+
+        TaskDetails memory new_task = TaskDetails(
+            msg.sender, rand_num, _task_message, block.timestamp, _task_complete_date, TASK_STATUS.PENDING, signed_message_val);  
+        
+        tasks_map[msg.sender].push(new_task);
+        task_id_to_owner_map[task_id_generated] = msg.sender;
+        task_id_map[task_id_generated] = new_task;
 
 
-        if(tasks_sig_map[signed_message_val] == msg.sender && tasks_id_map[task_id_generated] == msg.sender) created = true;
-        else created = false;
+        // if(tasks_sig_map[signed_message_val] == msg.sender && task_id_to_owner_map[task_id_generated] == msg.sender) created = true;
+        created = true;
     }
+
+
+    modifier is_task_owner(uint _task_id_for_verify_owner) {
+        uint256 length = 0;
+        while (_task_id_for_verify_owner != 0) { _task_id_for_verify_owner >>= 8; length++; }
+        require(length > 0, "invalid task id");
+        require(task_id_to_owner_map[_task_id_for_verify_owner] == msg.sender && task_id_map[_task_id_for_verify_owner].task_owner == msg.sender, "You are not the task's owner");
+        _;
+    } 
+
+
+    function remove_task(uint _task_id_for_remove) external 
+        is_task_owner(_task_id_for_remove) returns(bool deleted) {
+            // verification in signature:
+            TaskDetails memory task_for_remove = task_id_map[_task_id_for_remove];
+            bytes32 task_sig_for_verify;
+
+            require(task_for_remove.task_status == TASK_STATUS.PENDING && task_id_to_owner_map[_task_id_for_remove] != address(0), "Task had been already CANCELED");
+
+            for(uint i; i < tasks_sig_map[msg.sender].length; i++) {
+                if(tasks_sig_map[msg.sender][i] == task_for_remove.task_signature) {
+                    task_sig_for_verify = tasks_sig_map[msg.sender][i];
+                    break;
+                }
+            }
+
+            require(Verify(msg.sender, task_for_remove.task_message, task_sig_for_verify), 'Task is no verified');
+            address owner = msg.sender; // just for prevent repeating
+            
+            // removing task proccess
+            task_for_remove.task_status = TASK_STATUS.CANCELED;
+            task_id_to_owner_map[_task_id_for_remove] = address(0);
+
+            uint init_length = tasks_sig_map[owner].length;
+            for(uint i; i < tasks_sig_map[owner].length; i++) {
+                if(tasks_sig_map[owner][i] == task_sig_for_verify) {
+                    tasks_sig_map[owner][i] = tasks_sig_map[owner][tasks_sig_map[owner].length-1];
+                    tasks_sig_map[owner].pop();
+                    require(tasks_sig_map[owner].length < init_length);
+                    deleted = true;
+                }
+            } 
+
+            require(deleted, "something went wrong");
+            emit TaskCreated(owner, task_for_remove.task_id);
+        } 
+
+
+
+
+
+
+
+
+
 
 
     // struct TaskDetails {
