@@ -13,11 +13,13 @@ import "@openzeppelin/contracts/utils/ShortStrings.sol";
 import "./TaskToken.sol";
 
 
+
 contract SimpleTaskManager is ERC20, VRFConsumerBase {
     // STATE VARIABLES:
-    address public immutable OWNER;
+    address public immutable OWNER; 
     uint public TOTAL_SUPPLY;
     uint private randomResult;
+    address public constant TOKEN_CONTRACT = 0x0E39cC01d2a35FFF7629D8607AFE228d7Fb3ca9e;
 
     event TaskCreated(address indexed cerator, uint indexed task_id_created);
     event TaskRemoved(address indexed remover, uint indexed task_id_removed);
@@ -175,7 +177,7 @@ contract SimpleTaskManager is ERC20, VRFConsumerBase {
             
             if(i == users_list.length-1 && users_list[i].user_address != msg.sender) created=false;
         }
-        require(user_exist, "First add user to user list");
+        require(user_exist, "First add user to user list"); 
 
 
         bytes32 req_id = getRandomNumberFromChainlinkVRF();
@@ -247,8 +249,32 @@ contract SimpleTaskManager is ERC20, VRFConsumerBase {
             require(deleted, "something went wrong");
             emit TaskCreated(owner, task_for_remove.task_id);
     }
-    
-     
+
+    function complete_task(uint _task_id) external is_task_owner(_task_id) returns(bool success, uint rewarded_amount) {
+        TaskDetails memory task_for_complete = task_id_map[_task_id];
+        task_for_complete.task_status = TASK_STATUS.COMPLETED;
+
+        bool user_exicted = false;
+        for(uint i; i < users_list.length; i++) {
+            if(users_list[i].user_address == msg.sender) {
+                user_exicted = true;
+
+                TaskToken token = TaskToken(TOKEN_CONTRACT);
+                bool successed = token.transferFrom(
+                    address(this), users_list[i].user_address, 10*(10**18));
+                
+                users_list[i].task_available -= 1;
+                users_list[i].token_rewarded += 10;
+
+                require(successed, "Some error occured in transferFrom function");
+            }
+        }
+
+        require(user_exicted, "User haven't listed into user list");
+        success = true;
+    }
+
+
 
 
 

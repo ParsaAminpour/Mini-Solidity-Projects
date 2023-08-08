@@ -9,7 +9,7 @@ compiler:
 dotenv: .env
 wallets:
   from_key: ${PRIVATE_KEY}
-networks:
-  default: sepolia2
+# networks:
+#   default: sepolia2
 
 

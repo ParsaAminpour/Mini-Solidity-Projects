@@ -104,7 +104,7 @@ contract Exercise is ERC20{  // most base like contract
     } 
 
     error address_error();
-    function test_owner(address _addr) public returns(address) {
+    function test_owner(address _addr) public view returns(address) {
         if(_addr != msg.sender) {
             revert address_error();
         }
@@ -117,7 +117,7 @@ contract Exercise is ERC20{  // most base like contract
     }
 
 
-    function test_function(uint _val) public ownerIs returns(bool) {
+    function test_function(uint _val) public view ownerIs returns(bool) {
         return _val == 0 ? true : false;
     }
 }
