@@ -229,7 +229,7 @@ contract SimpleTaskManager is ERC20, VRFConsumerBase {
 
             require(Verify(msg.sender, task_for_remove.task_message, task_sig_for_verify), 'Task is no verified');
             address owner = msg.sender; // just for prevent repeating
-            
+
             // removing task proccess
             task_for_remove.task_status = TASK_STATUS.CANCELED;
             task_id_to_owner_map[_task_id_for_remove] = address(0);
@@ -246,7 +246,9 @@ contract SimpleTaskManager is ERC20, VRFConsumerBase {
 
             require(deleted, "something went wrong");
             emit TaskCreated(owner, task_for_remove.task_id);
-        } 
+    }
+    
+     
 
 
 
