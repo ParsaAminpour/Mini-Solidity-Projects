@@ -1,3 +1,3 @@
 # Mini-Solidity-Projects
 
-<h1> There projects are command line interface </h1>
+<h1> There are projects in the command line interface </h1>
