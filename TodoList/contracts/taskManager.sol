@@ -9,7 +9,8 @@ import "@openzeppelin/contracts/security/Pausable.sol";
 import "@openzeppelin/contracts/utils/Address.sol";
 import "@openzeppelin/contracts/utils/Strings.sol";
 import "@openzeppelin/contracts/utils/math/Math.sol";
-import "@openzeppelin/contracts/utils/ShortStrings.sol";    
+import "@openzeppelin/contracts/utils/ShortStrings.sol";  
+import "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";  
 import "./TaskToken.sol";
 
 
@@ -23,6 +24,7 @@ contract SimpleTaskManager is ERC20, VRFConsumerBase {
 
     event TaskCreated(address indexed cerator, uint indexed task_id_created);
     event TaskRemoved(address indexed remover, uint indexed task_id_removed);
+    event EtherReceived(address indexed sender, uint indexed amount);
 
     enum TASK_STATUS { COMPLETED, PENDING, CANCELED }
 
@@ -70,6 +72,11 @@ contract SimpleTaskManager is ERC20, VRFConsumerBase {
 
 
     error UserAvailableError(address user_address);
+
+    function deposit() external payable {
+        emit EtherReceived(msg.sender, msg.value);
+    }
+
     function createUser() public returns(bool listed) {
         for(uint i; i < users_list.length; i++) {
             if(!(users_list[i].user_address == msg.sender)) {
@@ -273,23 +280,4 @@ contract SimpleTaskManager is ERC20, VRFConsumerBase {
         require(user_exicted, "User haven't listed into user list");
         success = true;
     }
-
-
-
-
-
-
-
-
-
-
-
-
-
-    // struct TaskDetails {
-    //     address task_owner; uint task_id; // id will fenerate from VRF
-    //     string task_message; uint task_created_date;
-    //     uint task_cmplete_period; TASK_STATAUS task_status;
-    // }
-
 }
