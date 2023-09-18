@@ -216,7 +216,7 @@ contract SimpleTaskManager is ERC20, VRFConsumerBase {
         uint256 length = 0;
         while (_task_id_for_verify_owner != 0) { _task_id_for_verify_owner >>= 8; length++; }
         require(length > 0, "invalid task id");
-        require(task_id_to_owner_map[_task_id_for_verify_owner] == msg.sender && task_id_map[_task_id_for_verify_owner].task_owner == msg.sender, "You are not the task's owner");
+        require(task_id_to_owner_map[_task_id_for_verify_owner] == msg.sender && task_id_map[_task_id_for_verify_owner].task_owner == msg.sender, "You are not the task owner");
         _;
     } 
 
