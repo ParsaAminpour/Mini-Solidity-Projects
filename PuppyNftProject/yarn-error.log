@@ -1,0 +1,49 @@
+Arguments: 
+  /snap/node/7823/bin/node /snap/node/7823/bin/yarn.js add @openzeppelin/contracts
+
+PATH: 
+  /home/jonathan/.bun/bin:/home/jonathan/.bun/bin:/home/jonathan/.bun/bin:/home/jonathan/.bun/bin:/home/jonathan/.cargo/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin:/snap/bin:/home/jonathan/.foundry/bin:/home/jonathan/.local/bin:/home/jonathan/.foundry/bin:/home/jonathan/.local/bin:/home/jonathan/.foundry/bin:/home/jonathan/.local/bin:/home/jonathan/.local/bin
+
+Yarn version: 
+  1.22.19
+
+Node version: 
+  18.18.0
+
+Platform: 
+  linux x64
+
+Trace: 
+  Error: getaddrinfo EAI_AGAIN registry.yarnpkg.com
+      at GetAddrInfoReqWrap.onlookup [as oncomplete] (node:dns:108:26)
+
+npm manifest: 
+  {
+    "name": "hardhat-project",
+    "devDependencies": {
+      "@nomicfoundation/hardhat-chai-matchers": "^2.0.3",
+      "@nomicfoundation/hardhat-ethers": "^3.0.5",
+      "@nomicfoundation/hardhat-network-helpers": "^1.0.10",
+      "@nomicfoundation/hardhat-toolbox": "^3.0.0",
+      "@nomicfoundation/hardhat-verify": "^1.1.1",
+      "@typechain/ethers-v6": "^0.4.3",
+      "@typechain/hardhat": "^8.0.3",
+      "@types/chai": "^4.3.11",
+      "@types/mocha": "^10.0.6",
+      "@types/node": "^20.10.6",
+      "chai": "^4.3.10",
+      "ethers": "^6.9.2",
+      "hardhat": "^2.19.4",
+      "hardhat-gas-reporter": "^1.0.9",
+      "solidity-coverage": "^0.8.5",
+      "ts-node": "^10.9.2",
+      "typechain": "^8.3.2",
+      "typescript": "^5.3.3"
+    }
+  }
+
+yarn manifest: 
+  No manifest
+
+Lockfile: 
+  No lockfile
